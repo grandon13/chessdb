@@ -1,0 +1,31 @@
+name: Chess2200 C+ migration
+
+on:
+  push:
+    branches:
+      - chess2200-cplus-migration-20261018
+    paths:
+      - .github/workflows/chess2200-cplus-migration.yml
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout migration branch
+        uses: actions/checkout@v4
+
+      - name: Run bounded paced ChessDB migration
+        run: python chess2200_migration/run.py
+
+      - name: Upload migration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chess2200-cplus-migration-results
+          path: |
+            chess2200_migration/results.jsonl
+            chess2200_migration/summary.json
+            chess2200_migration/positions.zlib.b64
+          if-no-files-found: warn
+          retention-days: 7
