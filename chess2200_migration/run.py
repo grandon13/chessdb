@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
+import base64
 import datetime as dt
 import hashlib
 import json
 import os
-import random
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-POSITIONS_PATH = ROOT / "positions.json"
+POSITIONS_B64_PATH = ROOT / "positions.zlib.b64"
 RESULTS_PATH = ROOT / "results.jsonl"
 SUMMARY_PATH = ROOT / "summary.json"
 BASE_URL = "https://www.chessdb.cn/cdb.php"
@@ -24,6 +25,12 @@ USER_AGENT = "Chess2200-CPlus-Migration/2.2"
 
 def utc_now():
     return dt.datetime.now(dt.timezone.utc).isoformat()
+
+
+def load_positions():
+    packed = base64.b64decode(POSITIONS_B64_PATH.read_text(encoding="ascii").strip())
+    payload = json.loads(zlib.decompress(packed).decode("utf-8"))
+    return payload
 
 
 def query_url(fen):
@@ -150,7 +157,7 @@ def append_record(record):
 
 
 def main():
-    payload = json.loads(POSITIONS_PATH.read_text(encoding="utf-8"))
+    payload = load_positions()
     positions = list(payload["positions"])
     positions.sort(key=lambda p: p.get("depth_key", 0), reverse=True)
 
